@@ -9,28 +9,31 @@ from scipy.misc import imread
 from PIL import Image
 np.set_printoptions(threshold=np.nan)
 
+image_dim = 224
 net = caffe.Net('/opt/caffe/models/bvlc_googlenet/deploy.prototxt' , '/opt/caffe/models/bvlc_googlenet/bvlc_googlenet.caffemodel', caffe.TEST)
+#net = caffe.Net('/opt/caffe/models/bvlc_alexnet/deploy.prototxt' , '/opt/caffe/models/bvlc_alexnet/bvlc_alexnet.caffemodel', caffe.TEST)
 
-layers = ['conv1/7x7_s2', 'conv2/3x3_reduce', 'inception_3a/1x1']
-pad = [3,0, 0]
-ix = [224,56, 28]
-batches = [4,4, 4]
-input_d = [3,64, 192]
-num_images=4
-array_image = np.zeros((num_images,3, 224, 224)).astype(np.float32) 
+layers = ['conv2/3x3_reduce', 'inception_3a/1x1']
+#layers = ['fc8']
+#pad = [3,0, 0]
+#ix = [224,56, 28]
+#batches = [4,4, 4]
+#input_d = [3,64, 192]
+num_images=10
+array_image = np.zeros((num_images,3, image_dim, image_dim)).astype(np.float32) 
 
 
 for i in range(0, num_images-1):
     image_name = 'cars_test/' + "%05d"%(i+1) + '.jpg' 
     img = Image.open(image_name)
-    img =  img.resize((224,224), Image.BILINEAR)
+    img =  img.resize((image_dim,image_dim), Image.BILINEAR)
     img.save(image_name)
     image = imread(image_name)
-    image = image.reshape(1,3,224,224)
+    image = image.reshape(1,3,image_dim,image_dim)
     array_image[i] = image
 
 array_image = np.asarray(array_image)
-array_image = array_image.reshape(num_images, 3, 224, 224)
+array_image = array_image.reshape(num_images, 3, image_dim, image_dim)
 net.blobs['data'].data[...] = array_image
 net.forward()
 
@@ -63,19 +66,20 @@ for layer in layers:
 
     
     bottom_name = net.bottom_names[layer][0]
-    pad_arr = np.zeros((batches[num_layer], input_d[num_layer], ix[num_layer]+2*pad[num_layer], ix[num_layer]+2*pad[num_layer])).astype(np.float32)
+#    pad_arr = np.zeros((batches[num_layer], input_d[num_layer], ix[num_layer]+2*pad[num_layer], ix[num_layer]+2*pad[num_layer])).astype(np.float32)
     input_blob = net.blobs[bottom_name].data[...]
    
-    for i in range(0, batches[num_layer]):
-        if (pad[num_layer]>0):
-    	    pad_arr[i,:,pad[num_layer]:-pad[num_layer],pad[num_layer]:-pad[num_layer]] = input_blob[i]
-	    print "PADDED_INPUT_BLOB" + str(i) 
-	    print pad_arr[i]
-	    print "INPUT_BLOB" + str(i) 
- 	    print input_blob[i]
-        else:
-            pad_arr = input_blob
-
+#    for i in range(0, batches[num_layer]):
+#        if (pad[num_layer]>0):
+#    	    pad_arr[i,:,pad[num_layer]:-pad[num_layer],pad[num_layer]:-pad[num_layer]] = input_blob[i]
+#	    print "PADDED_INPUT_BLOB" + str(i) 
+#	    print pad_arr[i]
+#	    print "INPUT_BLOB" + str(i) 
+# 	    print input_blob[i]
+#        else:
+#            pad_arr = input_blob
+#
+    pad_arr = input_blob
     input_file = open(input_name, 'wb')
     input_file.write(struct.pack('i' * (1+len(pad_arr.shape)), len(pad_arr.shape), *pad_arr.shape))
     pad_arr.tofile(input_file)
@@ -93,3 +97,18 @@ for layer in layers:
     print "output_blob shape " + str(output_blob.shape)
     output_file.close()
     num_layer = num_layer + 1
+
+
+    dma_in_name = dirname + '/dma_in'
+    dma_in_file = open(dma_in_name, 'wb')
+    W.tofile(dma_in_file)
+    dma_in_file.close()
+    dma_in_file = open(dma_in_name, 'ab')
+    b.tofile(dma_in_file)
+    pad_arr.tofile(dma_in_file)
+    dma_in_file.close()
+
+    dma_out_name = dirname + '/dma_out'
+    dma_out_file = open(dma_out_name, 'wb')
+    output_blob.tofile(dma_out_file)
+    dma_out_file.close()
