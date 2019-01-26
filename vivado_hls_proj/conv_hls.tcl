@@ -23,7 +23,7 @@ if {$enable_cosim} {
 #test 2
 csim_design -compiler gcc -argv "nn_params/conv2_3x3_reduce"
 if {$enable_cosim} {
-  cosim_design -argv "nn_params/inception_3a_1x1"
+  cosim_design -argv "nn_params/conv2_3x3_reduce"
   exec cp conv_proj/solution1/sim/report/conv_layer_cosim.rpt results/conv/conv2_cosim.rpt
 }
 
