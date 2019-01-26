@@ -1,3 +1,5 @@
+set enable_cosim 0
+
 open_project conv_proj
 set_top conv_layer 
 add_files ../conv_test/conv_layer.cpp
@@ -7,7 +9,21 @@ add_files -tb ../nn_params
 open_solution "solution1"
 set_part {xcvu095-ffvc1517-2-e} -tool vivado
 create_clock -period 10 -name default
-csim_design -compiler gcc
 csynth_design
-cosim_design
-#export_design -format ip_catalog
+
+exec mkdir -p results/conv
+exec cp conv_proj/solution1/syn/report/conv_layer_csynth.rpt results/conv/synth.rpt
+
+#test 1
+csim_design -compiler gcc -argv "nn_params/inception_3a_1x1"
+if {$enable_cosim} {
+  cosim_design -argv "nn_params/inception_3a_1x1"
+  exec cp conv_proj/solution1/sim/report/conv_layer_cosim.rpt results/conv/conv1_cosim.rpt
+}
+#test 2
+csim_design -compiler gcc -argv "nn_params/conv2_3x3_reduce"
+if {$enable_cosim} {
+  cosim_design -argv "nn_params/inception_3a_1x1"
+  exec cp conv_proj/solution1/sim/report/conv_layer_cosim.rpt results/conv/conv2_cosim.rpt
+}
+
