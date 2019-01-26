@@ -7,7 +7,7 @@
 #include <stdlib.h>
 using namespace std;
 
-int main()
+int main(int argc, char ** argv)
 {
   float * weights;
   float * biases;
@@ -16,9 +16,13 @@ int main()
   float * outputs;
   int retval = 0;
 
+  string imageDir = "nn_params/inception_3a_1x1/";
+  if(argc == 2)
+    imageDir = argv[1];
+    cout << "Using test " << imageDir <<  endl;
+
   cout << "Starting Convolution Test " << endl;
 
-  string imageDir = "nn_params/inception_3a_1x1/";
   vector<int> input_params = readFile(imageDir + "/input", inputs, MAX_CONV_INPUT *MAX_BATCH);
   vector<int> output_params = readFile(imageDir + "/output", gold_outputs, MAX_CONV_OUTPUT * MAX_BATCH);
   vector<int> weight_params = readFile(imageDir + "/weights", weights, MAX_OUTPUT_DIMS*MAX_INPUT_DIMS*MAX_KERNEL_SIZE*MAX_KERNEL_SIZE);

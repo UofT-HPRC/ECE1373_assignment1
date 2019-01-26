@@ -7,7 +7,7 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char **argv)
 {
   float * weights;
   float * biases;
@@ -16,7 +16,12 @@ int main()
   float * outputs;
   int retval = 0;
   
-  std::string imageDir = "nn_params/fc3/";
+  
+  string imageDir = "nn_params/fc3/";
+  if(argc == 2)
+    imageDir = argv[1];
+    cout << "Using test " << imageDir <<  endl;
+
   vector<int> input_size = readFile(imageDir+"input", inputs, MAX_BATCH*MAX_INPUT_SIZE);
   vector<int> output_size = readFile(imageDir+"output", gold_outputs, MAX_BATCH*MAX_OUTPUT_SIZE);
   vector<int> weight_size = readFile(imageDir+"weights", weights, MAX_OUTPUT_SIZE*MAX_INPUT_SIZE);
